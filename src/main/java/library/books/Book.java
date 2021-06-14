@@ -30,5 +30,7 @@ public class Book {
         return noOfCopies;
     }
 
-
+    public void setNoOfCopies(int noOfCopies){
+        this.noOfCopies = noOfCopies;
+    }
 }
