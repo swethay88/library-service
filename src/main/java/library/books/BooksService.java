@@ -1,13 +1,15 @@
 package library.books;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class BooksService {
     private Map<String, Book> allBooks = new HashMap<>();
     private UserService userService;
-    private CheckedoutBook checkedoutBook;
+    private Map<String, List<CheckedoutBook>> displayCheckedoutBooks = new HashMap<>();
 
     public void setUserService(UserService userService) {
         this.userService = userService;
@@ -37,7 +39,7 @@ public class BooksService {
         }
     }
 
-    public CheckedoutBook checkoutBook(String email, String title, Instant checkedoutDate) {
+    public Map<String, List<CheckedoutBook>> checkoutBook(String email, String title, Instant checkedoutDate) {
         //email check
         if (!userService.doesUserExist(email)) {
             throw new UserDoesNotExistException("Invalid user");
@@ -51,9 +53,11 @@ public class BooksService {
             throw new BookCopyNotAvailableException("This book copy is not available to checkout in the library");
         }
         CheckedoutBook checkedoutBook = new CheckedoutBook(email, title, checkedoutDate);
+        List<CheckedoutBook> checkedoutBookList = new ArrayList<>();
         int nCopies = allBooks.get(title).getNoOfCopies() - 1;
         Book book = allBooks.get(title);
         book.setNoOfCopies(nCopies);
-        return checkedoutBook;
+        displayCheckedoutBooks.put(email, checkedoutBookList);
+        return displayCheckedoutBooks;
     }
 }
