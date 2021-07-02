@@ -65,6 +65,15 @@ public class BooksService {
     }
 
     public List<CheckedoutBook> listOfCheckedoutBooks(String email) {
-        return displayCheckedoutBooks.get(email);
+        List<CheckedoutBook> checkedoutBookList = displayCheckedoutBooks.get(email);
+        //to display list of checkedout books in descending order
+        Collections.sort(checkedoutBookList, new Comparator<CheckedoutBook>() {
+            public int compare(CheckedoutBook o1, CheckedoutBook o2) {
+                if (o1.getCheckedoutDate() == null || o2.getCheckedoutDate() == null)
+                    return 0;
+                return o1.getCheckedoutDate().compareTo(o2.getCheckedoutDate());
+            }
+        });
+        return checkedoutBookList;
     }
 }
