@@ -1,10 +1,7 @@
 package library.books;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class BooksService {
     private Map<String, Book> allBooks = new HashMap<>();
@@ -39,7 +36,7 @@ public class BooksService {
         }
     }
 
-    public Map<String, List<CheckedoutBook>> checkoutBook(String email, String title, Instant checkedoutDate) {
+    public CheckedoutBook checkoutBook(String email, String title, Instant checkedoutDate) {
         //email check
         if (!userService.doesUserExist(email)) {
             throw new UserDoesNotExistException("Invalid user");
@@ -52,12 +49,22 @@ public class BooksService {
         if (allBooks.get(title).getNoOfCopies() == 0) {
             throw new BookCopyNotAvailableException("This book copy is not available to checkout in the library");
         }
+        //maximium books check
+        if (displayCheckedoutBooks.containsKey(email) && displayCheckedoutBooks.get(email).size() > 5) {
+            throw new MaximumCheckedoutBooksReachedException("You can only checkout maximum of 5 books");
+        }
+        //checkingout book
         CheckedoutBook checkedoutBook = new CheckedoutBook(email, title, checkedoutDate);
-        List<CheckedoutBook> checkedoutBookList = new ArrayList<>();
+        if (!displayCheckedoutBooks.containsKey(email)) {
+            displayCheckedoutBooks.put(email, new ArrayList<>());
+        }
+        displayCheckedoutBooks.get(email).add(checkedoutBook);
         int nCopies = allBooks.get(title).getNoOfCopies() - 1;
-        Book book = allBooks.get(title);
-        book.setNoOfCopies(nCopies);
-        displayCheckedoutBooks.put(email, checkedoutBookList);
-        return displayCheckedoutBooks;
+        allBooks.get(title).setNoOfCopies(nCopies);
+        return checkedoutBook;
+    }
+
+    public List<CheckedoutBook> listOfCheckedoutBooks(String email) {
+        return displayCheckedoutBooks.get(email);
     }
 }
