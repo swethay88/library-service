@@ -5,8 +5,7 @@ import org.junit.jupiter.api.Test;
 import java.time.Instant;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class BookServiceTest {
 
@@ -62,9 +61,7 @@ public class BookServiceTest {
             service.getUserService().signupUser("Swetha", "yarlagadda", "32434 GC FHills MI", 32, "yy.ss@gmail.com");
             service.getBookService().addBook("yy.ss@gmail.com", "Chicken Squad", "Cronin", "fiction", 1);
             service.getBookService().checkoutBook("yy.ss@gmail.com", "Chicken Squad", Instant.now());
-            if (service.getBookService().searchBook("yy.ss@gmail.com", "Chicken Squad").getNoOfCopies() == 0) {
-                throw new BookCopyNotAvailableException("This book copy is not available to checkout in the library");
-            }
+            service.getBookService().checkoutBook("yy.ss@gmail.com", "Chicken Squad", Instant.now());
             fail("Expecting exception");
         } catch (BookCopyNotAvailableException ex) {
             assertEquals("This book copy is not available to checkout in the library", ex.getMessage());
@@ -73,22 +70,15 @@ public class BookServiceTest {
 
     //checkedout books are null i.e., List is empty
     @Test
-    public void noCheckedoutBooks() {
-        try {
-            service.getUserService().signupUser("Swetha", "yarlagadda", "32434 GC FHills MI", 32, "yy.ss@gmail.com");
-            List<CheckedoutBook> checkedoutBookList = service.getBookService().listOfCheckedoutBooks("yy.ss@gmail.com");
-            if (checkedoutBookList == null) {
-                throw new NoCheckedoutBooksException("There are no books checkedout!");
-            }
-            fail("Expecting exception");
-        } catch (NoCheckedoutBooksException ex) {
-            assertEquals("There are no books checkedout!", ex.getMessage());
-        }
+    public void noCheckedoutBooksTest() {
+        service.getUserService().signupUser("Swetha", "yarlagadda", "32434 GC FHills MI", 32, "yy.ss@gmail.com");
+        List<CheckedoutBook> checkedoutBookList = service.getBookService().listOfCheckedoutBooks("yy.ss@gmail.com");
+        assertNotNull(checkedoutBookList);
     }
 
     //one user checking out multiple books
     @Test
-    public void oneUserMultipleBooksCheckout() {
+    public void oneUserMultipleBooksCheckoutTest() {
         service.getUserService().signupUser("Swetha", "yarlagadda", "32434 GC FHills MI", 32, "yy.ss@gmail.com");
         service.getBookService().addBook("yy.ss@gmail.com", "Chicken Squad", "Cronin", "fiction", 2);
         Instant currentTime = Instant.now();
@@ -107,7 +97,7 @@ public class BookServiceTest {
 
     //one user checking out multiple copies
     @Test
-    public void oneUserMultipleCopiesCheckout() {
+    public void oneUserMultipleCopiesCheckoutTest() {
         service.getUserService().signupUser("Swetha", "yarlagadda", "32434 GC FHills MI", 32, "yy.ss@gmail.com");
         service.getBookService().addBook("yy.ss@gmail.com", "Chicken Squad", "Cronin", "fiction", 3);
         Instant currentTime = Instant.now();
@@ -131,7 +121,7 @@ public class BookServiceTest {
 
     //multiple users checking out different books
     @Test
-    public void multipleUsersCheckingoutDifferentBooks() {
+    public void multipleUsersCheckingoutDifferentBooksTest() {
         service.getUserService().signupUser("Swetha", "yarlagadda", "32434 GC FHills MI", 32, "yy.ss@gmail.com");
         service.getBookService().addBook("yy.ss@gmail.com", "Chicken Squad", "Cronin", "fiction", 2);
         Instant currentTime = Instant.now();
@@ -153,7 +143,7 @@ public class BookServiceTest {
 
     //multiple users checking out same books
     @Test
-    public void multipleUsersCheckingoutSameBook() {
+    public void multipleUsersCheckingoutSameBookTest() {
         service.getUserService().signupUser("Swetha", "yarlagadda", "32434 GC FHills MI", 32, "yy.ss@gmail.com");
         service.getBookService().addBook("yy.ss@gmail.com", "Chicken Squad", "Cronin", "fiction", 2);
         Instant currentTime = Instant.now();
