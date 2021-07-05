@@ -7,6 +7,7 @@ public class BooksService {
     private Map<String, Book> allBooks = new HashMap<>();
     private UserService userService;
     private Map<String, List<CheckedoutBook>> displayCheckedoutBooks = new HashMap<>();
+    private Map<String, List<ReturnedBook>> returnedBooksMap = new HashMap<>();
 
     public void setUserService(UserService userService) {
         this.userService = userService;
@@ -65,15 +66,51 @@ public class BooksService {
     }
 
     public List<CheckedoutBook> listOfCheckedoutBooks(String email) {
-        List<CheckedoutBook> checkedoutBookList = displayCheckedoutBooks.get(email);
+        List<CheckedoutBook> currentCheckedoutBookList = displayCheckedoutBooks.get(email);
         //to display list of checkedout books in descending order
-        Collections.sort(checkedoutBookList, new Comparator<CheckedoutBook>() {
+        Collections.sort(currentCheckedoutBookList, new Comparator<CheckedoutBook>() {
             public int compare(CheckedoutBook o1, CheckedoutBook o2) {
                 if (o1.getCheckedoutDate() == null || o2.getCheckedoutDate() == null)
                     return 0;
                 return o1.getCheckedoutDate().compareTo(o2.getCheckedoutDate());
             }
         });
-        return checkedoutBookList;
+        //List of books checkedout by a particular user, in descending order of dates
+        return currentCheckedoutBookList;
+    }
+
+   public ReturnedBook returnBook(String email, String title, Instant returnDate){
+        //email check
+       if (!userService.doesUserExist(email)) {
+           throw new UserDoesNotExistException("Invalid user");
+       }
+
+       //verify if the book is checkedout by the user
+       // i.e., a user can return books checkedout from the respective account
+       // i.e., a user cannot return the books checkedout by other users
+       List<CheckedoutBook> currentChekedoutBookList = displayCheckedoutBooks.get(email);
+       boolean check = false;
+       for(CheckedoutBook c : currentChekedoutBookList) {
+           if (!c.getTitle().equals(title)) {
+               check = true;
+           }
+       }
+       if(!check){
+           throw new BookNotCheckedoutException("This book is not checkedout by you");
+       }
+
+       //Returning book
+       ReturnedBook returnedBook = new ReturnedBook(email, title, returnDate);
+       if (!returnedBooksMap.containsKey(email)) {
+           returnedBooksMap.put(email, new ArrayList<>());
+       }
+       returnedBooksMap.get(email).add(returnedBook);
+       int nCopies = allBooks.get(title).getNoOfCopies() + 1;
+       allBooks.get(title).setNoOfCopies(nCopies);
+       return returnedBook;
+   }
+
+    public List<ReturnedBook> listOfReturnedBooks(String email) {
+        return returnedBooksMap.get(email);
     }
 }

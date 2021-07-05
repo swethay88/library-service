@@ -163,4 +163,19 @@ public class BookServiceTest {
         assertEquals(checkedoutBookList2.size(), 1);
 
     }
+
+    //simple return book test
+    @Test
+    public void simpleReturnBookTest(){
+        service.getUserService().signupUser("Swetha", "yarlagadda", "32434 GC FHills MI", 32, "yy.ss@gmail.com");
+        service.getBookService().addBook("yy.ss@gmail.com", "Chicken Squad", "Cronin", "fiction", 2);
+        Instant currentTime = Instant.now();
+        service.getBookService().checkoutBook("yy.ss@gmail.com", "Chicken Squad", currentTime);
+        ReturnedBook r = service.getBookService().returnBook("yy.ss@gmail.com", "Chicken Squad", currentTime);
+        assertEquals(r.getEmail(), "yy.ss@gmail.com");
+        assertEquals(r.getTitle(), "Chicken Squad");
+        assertEquals(r.getReturnDate(), currentTime);
+        List<ReturnedBook> returnedBookList = service.getBookService().listOfReturnedBooks("yy.ss@gmail.com");
+        assertEquals(returnedBookList.size(), 1);
+    }
 }
