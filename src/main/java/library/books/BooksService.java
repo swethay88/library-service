@@ -7,7 +7,7 @@ public class BooksService {
     private Map<String, Book> allBooks = new HashMap<>();
     private UserService userService;
     private Map<String, List<CheckedoutBook>> displayCheckedoutBooks = new HashMap<>();
-    private Map<String, List<ReturnedBook>> returnedBooksMap = new HashMap<>();
+    private Map<String, List<CheckedoutBook>> returnedBooksMap = new HashMap<>();
 
     public void setUserService(UserService userService) {
         this.userService = userService;
@@ -79,7 +79,7 @@ public class BooksService {
         return currentCheckedoutBookList;
     }
 
-   public ReturnedBook returnBook(String email, String title, Instant returnDate){
+   public CheckedoutBook returnBook(String email, String title, Instant returnDate){
         //email check
        if (!userService.doesUserExist(email)) {
            throw new UserDoesNotExistException("Invalid user");
@@ -95,22 +95,33 @@ public class BooksService {
                check = true;
            }
        }
-       if(!check){
+       if(check){
            throw new BookNotCheckedoutException("This book is not checkedout by you");
        }
 
        //Returning book
-       ReturnedBook returnedBook = new ReturnedBook(email, title, returnDate);
+       CheckedoutBook returnedBook = new CheckedoutBook(title, returnDate);
+       returnedBook.setEmail(email);
        if (!returnedBooksMap.containsKey(email)) {
            returnedBooksMap.put(email, new ArrayList<>());
        }
        returnedBooksMap.get(email).add(returnedBook);
        int nCopies = allBooks.get(title).getNoOfCopies() + 1;
        allBooks.get(title).setNoOfCopies(nCopies);
+
+       //remove the returned book from current chekedout list
+       List<CheckedoutBook> currentCheckedoutBookList = displayCheckedoutBooks.get(email);
+       CheckedoutBook temp = null;
+       for(CheckedoutBook c : currentChekedoutBookList) {
+           if(c.getEmail().equals(returnedBook.getEmail())){
+               temp = c;
+           }
+       }
+       currentCheckedoutBookList.remove(temp);
        return returnedBook;
    }
 
-    public List<ReturnedBook> listOfReturnedBooks(String email) {
+    public List<CheckedoutBook> listOfReturnedBooks(String email) {
         return returnedBooksMap.get(email);
     }
 }

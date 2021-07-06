@@ -171,11 +171,13 @@ public class BookServiceTest {
         service.getBookService().addBook("yy.ss@gmail.com", "Chicken Squad", "Cronin", "fiction", 2);
         Instant currentTime = Instant.now();
         service.getBookService().checkoutBook("yy.ss@gmail.com", "Chicken Squad", currentTime);
-        ReturnedBook r = service.getBookService().returnBook("yy.ss@gmail.com", "Chicken Squad", currentTime);
+        CheckedoutBook r = service.getBookService().returnBook("yy.ss@gmail.com", "Chicken Squad", currentTime);
         assertEquals(r.getEmail(), "yy.ss@gmail.com");
         assertEquals(r.getTitle(), "Chicken Squad");
         assertEquals(r.getReturnDate(), currentTime);
-        List<ReturnedBook> returnedBookList = service.getBookService().listOfReturnedBooks("yy.ss@gmail.com");
+        List<CheckedoutBook> returnedBookList = service.getBookService().listOfReturnedBooks("yy.ss@gmail.com");
         assertEquals(returnedBookList.size(), 1);
+        List<CheckedoutBook> checkedoutBookList = service.getBookService().listOfCheckedoutBooks("yy.ss@gmail.com");
+        assertEquals(checkedoutBookList.size(), 0);
     }
 }
