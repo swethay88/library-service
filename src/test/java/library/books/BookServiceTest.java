@@ -4,29 +4,38 @@ import library.books.exceptions.BookCopyNotAvailableException;
 import library.books.exceptions.BookNotCheckedoutException;
 import library.books.exceptions.BookTitleNotAvailableException;
 import library.books.exceptions.UserDoesNotExistException;
-import org.junit.jupiter.api.Test;
+import org.junit.Before;
+import org.junit.Test;
 
 import java.time.Instant;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 public class BookServiceTest {
 
-    private LibraryService service = new LibraryService();
+    private static final String USER1 = "user1@gmail.com";
+    
+    private LibraryService service;
 
+    @Before
+    public void setUp(){
+       service = new LibraryService();
+        service.getUserService().signupUser("Swetha", "yarlagadda", "32434 GC FHills MI", 32, USER1);
+    }
+    
     //User signedup, added a book, checkedout the added book
     @Test
     public void chekoutBookSimpleTest() {
-        service.getUserService().signupUser("Swetha", "yarlagadda", "32434 GC FHills MI", 32, "yy.ss@gmail.com");
-        service.getBookService().addBook("yy.ss@gmail.com", "Chicken Squad", "Cronin", "fiction", 2);
+        service.getBookService().addBook(USER1, "Chicken Squad", "Cronin", "fiction", 2);
         Instant currentTime = Instant.now();
-        CheckedoutBook c = service.getBookService().checkoutBook("yy.ss@gmail.com", "Chicken Squad", currentTime);
+        CheckedoutBook c = service.getBookService().checkoutBook(USER1, "Chicken Squad", currentTime);
         //assert c variables
-        assertEquals(c.getEmail(), "yy.ss@gmail.com");
+        assertEquals(c.getEmail(), USER1);
         assertEquals(c.getTitle(), "Chicken Squad");
         assertEquals(c.getCheckedoutDate(), currentTime);
-        List<CheckedoutBook> checkedoutBookList = service.getBookService().listOfCheckedoutBooks("yy.ss@gmail.com");
+        List<CheckedoutBook> checkedoutBookList = service.getBookService().listOfCheckedoutBooks(USER1);
         assertEquals(checkedoutBookList.size(), 1);
     }
 
@@ -34,7 +43,7 @@ public class BookServiceTest {
     @Test
     public void chekoutBookUserDoesntExistTest() {
         try {
-            service.getBookService().checkoutBook("yy.ss@gmail.com", "Chicken Squad", Instant.now());
+            service.getBookService().checkoutBook("user2@gmail.com", "Chicken Squad", Instant.now());
             fail("Expecting exception");
         } catch (UserDoesNotExistException ex) {
             // expected exception
@@ -45,9 +54,8 @@ public class BookServiceTest {
     //Test if book doesn't exist ie., if the user is trying to checkout a book which is not added in the library
     @Test
     public void titleDoesntExistTest() {
-        service.getUserService().signupUser("Swetha", "yarlagadda", "32434 GC FHills MI", 32, "yy.ss@gmail.com");
         try {
-            service.getBookService().checkoutBook("yy.ss@gmail.com", "Chicken Squad", Instant.now());
+            service.getBookService().checkoutBook(USER1, "Chicken Squad", Instant.now());
             fail("Expecting exception");
         } catch (BookTitleNotAvailableException ex) {
             assertEquals("The book title is not available", ex.getMessage());
@@ -57,11 +65,10 @@ public class BookServiceTest {
     //Test if the user is trying to checkout a book but copies of the book aren't available in the library
     @Test
     public void copiesNotAvailableTest() {
-        service.getUserService().signupUser("Swetha", "yarlagadda", "32434 GC FHills MI", 32, "yy.ss@gmail.com");
-        service.getBookService().addBook("yy.ss@gmail.com", "Chicken Squad", "Cronin", "fiction", 1);
-        service.getBookService().checkoutBook("yy.ss@gmail.com", "Chicken Squad", Instant.now());
+        service.getBookService().addBook(USER1, "Chicken Squad", "Cronin", "fiction", 1);
+        service.getBookService().checkoutBook(USER1, "Chicken Squad", Instant.now());
         try {
-            service.getBookService().checkoutBook("yy.ss@gmail.com", "Chicken Squad", Instant.now());
+            service.getBookService().checkoutBook(USER1, "Chicken Squad", Instant.now());
             fail("Expecting exception");
         } catch (BookCopyNotAvailableException ex) {
             assertEquals("This book copy is not available to checkout in the library", ex.getMessage());
@@ -72,8 +79,8 @@ public class BookServiceTest {
     /*@Test
     public void noCheckedoutBooksTest() {
         try {
-            service.getUserService().signupUser("Swetha", "yarlagadda", "32434 GC FHills MI", 32, "yy.ss@gmail.com");
-            List<CheckedoutBook> checkedoutBookList = service.getBookService().listOfCheckedoutBooks("yy.ss@gmail.com");
+            service.getUserService().signupUser("Swetha", "yarlagadda", "32434 GC FHills MI", 32, USER1);
+            List<CheckedoutBook> checkedoutBookList = service.getBookService().listOfCheckedoutBooks(USER1);
             assertNotNull(checkedoutBookList);
             fail("Expecting exception");
         } catch (NoCheckedoutBooksException ex) {
@@ -85,79 +92,76 @@ public class BookServiceTest {
     //one user checking out multiple books and returning a book
     @Test
     public void oneUserMultipleBooksCheckoutAndReturnTest() {
-        service.getUserService().signupUser("Swetha", "yarlagadda", "32434 GC FHills MI", 32, "yy.ss@gmail.com");
-        service.getBookService().addBook("yy.ss@gmail.com", "Chicken Squad", "Cronin", "fiction", 2);
+        service.getBookService().addBook(USER1, "Chicken Squad", "Cronin", "fiction", 2);
         Instant currentTime = Instant.now();
-        CheckedoutBook c = service.getBookService().checkoutBook("yy.ss@gmail.com", "Chicken Squad", currentTime);
-        assertEquals(c.getEmail(), "yy.ss@gmail.com");
+        CheckedoutBook c = service.getBookService().checkoutBook(USER1, "Chicken Squad", currentTime);
+        assertEquals(c.getEmail(), USER1);
         assertEquals(c.getTitle(), "Chicken Squad");
         assertEquals(c.getCheckedoutDate(), currentTime);
-        service.getBookService().addBook("yy.ss@gmail.com", "Petu Pumpkin Tiffin Thief", "Arundathi", "fiction", 3);
-        CheckedoutBook ch = service.getBookService().checkoutBook("yy.ss@gmail.com", "Petu Pumpkin Tiffin Thief", currentTime);
-        assertEquals(ch.getEmail(), "yy.ss@gmail.com");
+        service.getBookService().addBook(USER1, "Petu Pumpkin Tiffin Thief", "Arundathi", "fiction", 3);
+        CheckedoutBook ch = service.getBookService().checkoutBook(USER1, "Petu Pumpkin Tiffin Thief", currentTime);
+        assertEquals(ch.getEmail(), USER1);
         assertEquals(ch.getTitle(), "Petu Pumpkin Tiffin Thief");
         assertEquals(ch.getCheckedoutDate(), currentTime);
-        CheckedoutBook r = service.getBookService().returnBook("yy.ss@gmail.com", "Petu Pumpkin Tiffin Thief", currentTime);
-        assertEquals(r.getEmail(), "yy.ss@gmail.com");
+        CheckedoutBook r = service.getBookService().returnBook(USER1, "Petu Pumpkin Tiffin Thief", currentTime);
+        assertEquals(r.getEmail(), USER1);
         assertEquals(r.getTitle(), "Petu Pumpkin Tiffin Thief");
         assertEquals(r.getReturnDate(), currentTime);
-        List<CheckedoutBook> returnedBookList = service.getBookService().listOfReturnedBooks("yy.ss@gmail.com");
+        List<CheckedoutBook> returnedBookList = service.getBookService().listOfReturnedBooks(USER1);
         assertEquals(returnedBookList.size(), 1);
-        List<CheckedoutBook> checkedoutBookList = service.getBookService().listOfCheckedoutBooks("yy.ss@gmail.com");
+        List<CheckedoutBook> checkedoutBookList = service.getBookService().listOfCheckedoutBooks(USER1);
         assertEquals(checkedoutBookList.size(), 1);
     }
 
     //one user checking out multiple copies
     @Test
     public void oneUserMultipleCopiesCheckoutAndReturnTest() {
-        service.getUserService().signupUser("Swetha", "yarlagadda", "32434 GC FHills MI", 32, "yy.ss@gmail.com");
-        service.getBookService().addBook("yy.ss@gmail.com", "Chicken Squad", "Cronin", "fiction", 3);
+        service.getBookService().addBook(USER1, "Chicken Squad", "Cronin", "fiction", 3);
         Instant currentTime = Instant.now();
-        CheckedoutBook c = service.getBookService().checkoutBook("yy.ss@gmail.com", "Chicken Squad", currentTime);
-        assertEquals(c.getEmail(), "yy.ss@gmail.com");
+        CheckedoutBook c = service.getBookService().checkoutBook(USER1, "Chicken Squad", currentTime);
+        assertEquals(c.getEmail(), USER1);
         assertEquals(c.getTitle(), "Chicken Squad");
         assertEquals(c.getCheckedoutDate(), currentTime);
-        service.getBookService().addBook("yy.ss@gmail.com", "Chicken Squad", "Cronin", "fiction", 3);
-        CheckedoutBook ch = service.getBookService().checkoutBook("yy.ss@gmail.com", "Chicken Squad", currentTime);
-        assertEquals(ch.getEmail(), "yy.ss@gmail.com");
+        service.getBookService().addBook(USER1, "Chicken Squad", "Cronin", "fiction", 3);
+        CheckedoutBook ch = service.getBookService().checkoutBook(USER1, "Chicken Squad", currentTime);
+        assertEquals(ch.getEmail(), USER1);
         assertEquals(ch.getTitle(), "Chicken Squad");
         assertEquals(ch.getCheckedoutDate(), currentTime);
-        service.getBookService().addBook("yy.ss@gmail.com", "Chicken Squad", "Cronin", "fiction", 3);
-        CheckedoutBook che = service.getBookService().checkoutBook("yy.ss@gmail.com", "Chicken Squad", currentTime);
-        assertEquals(che.getEmail(), "yy.ss@gmail.com");
+        service.getBookService().addBook(USER1, "Chicken Squad", "Cronin", "fiction", 3);
+        CheckedoutBook che = service.getBookService().checkoutBook(USER1, "Chicken Squad", currentTime);
+        assertEquals(che.getEmail(), USER1);
         assertEquals(che.getTitle(), "Chicken Squad");
         assertEquals(che.getCheckedoutDate(), currentTime);
-        List<CheckedoutBook> checkedoutBookList = service.getBookService().listOfCheckedoutBooks("yy.ss@gmail.com");
+        List<CheckedoutBook> checkedoutBookList = service.getBookService().listOfCheckedoutBooks(USER1);
         assertEquals(checkedoutBookList.size(), 3);
-        CheckedoutBook r = service.getBookService().returnBook("yy.ss@gmail.com", "Chicken Squad", currentTime);
-        assertEquals(r.getEmail(), "yy.ss@gmail.com");
+        CheckedoutBook r = service.getBookService().returnBook(USER1, "Chicken Squad", currentTime);
+        assertEquals(r.getEmail(), USER1);
         assertEquals(r.getTitle(), "Chicken Squad");
         assertEquals(r.getReturnDate(), currentTime);
-        List<CheckedoutBook> returnedBookList = service.getBookService().listOfReturnedBooks("yy.ss@gmail.com");
+        List<CheckedoutBook> returnedBookList = service.getBookService().listOfReturnedBooks(USER1);
         assertEquals(returnedBookList.size(), 1);
-        List<CheckedoutBook> checkedoutBookList2 = service.getBookService().listOfCheckedoutBooks("yy.ss@gmail.com");
+        List<CheckedoutBook> checkedoutBookList2 = service.getBookService().listOfCheckedoutBooks(USER1);
         assertEquals(checkedoutBookList.size(), 2);
     }
 
     //multiple users checking out different books
     @Test
     public void multipleUsersCheckingoutAndReturningDifferentBooksTest() {
-        service.getUserService().signupUser("Swetha", "yarlagadda", "32434 GC FHills MI", 32, "yy.ss@gmail.com");
-        service.getBookService().addBook("yy.ss@gmail.com", "Chicken Squad", "Cronin", "fiction", 2);
+        service.getBookService().addBook(USER1, "Chicken Squad", "Cronin", "fiction", 2);
         Instant currentTime = Instant.now();
-        CheckedoutBook c = service.getBookService().checkoutBook("yy.ss@gmail.com", "Chicken Squad", currentTime);
-        assertEquals(c.getEmail(), "yy.ss@gmail.com");
+        CheckedoutBook c = service.getBookService().checkoutBook(USER1, "Chicken Squad", currentTime);
+        assertEquals(c.getEmail(), USER1);
         assertEquals(c.getTitle(), "Chicken Squad");
         assertEquals(c.getCheckedoutDate(), currentTime);
-        List<CheckedoutBook> checkedoutBookList1 = service.getBookService().listOfCheckedoutBooks("yy.ss@gmail.com");
+        List<CheckedoutBook> checkedoutBookList1 = service.getBookService().listOfCheckedoutBooks(USER1);
         assertEquals(checkedoutBookList1.size(), 1);
-        CheckedoutBook r =service.getBookService().returnBook("yy.ss@gmail.com", "Chicken Squad", currentTime);
-        assertEquals(r.getEmail(), "yy.ss@gmail.com");
+        CheckedoutBook r =service.getBookService().returnBook(USER1, "Chicken Squad", currentTime);
+        assertEquals(r.getEmail(), USER1);
         assertEquals(r.getTitle(), "Chicken Squad");
         assertEquals(r.getReturnDate(), currentTime);
-        List<CheckedoutBook> checkedoutBookList2 = service.getBookService().listOfCheckedoutBooks("yy.ss@gmail.com");
+        List<CheckedoutBook> checkedoutBookList2 = service.getBookService().listOfCheckedoutBooks(USER1);
         assertEquals(checkedoutBookList2.size(), 0);
-        List<CheckedoutBook> returnedBookList1 = service.getBookService().listOfReturnedBooks("yy.ss@gmail.com");
+        List<CheckedoutBook> returnedBookList1 = service.getBookService().listOfReturnedBooks(USER1);
         assertEquals(returnedBookList1.size(), 1);
         service.getUserService().signupUser("Phani", "yarlagadda", "1111 aa Newark CA", 32, "pp.yy@gmail.com");
         service.getBookService().addBook("pp.yy@gmail.com", "Petu Pumpkin Tiffin Thief", "Arundathi", "fiction", 3);
@@ -181,22 +185,21 @@ public class BookServiceTest {
     //multiple users checking out same books
     @Test
     public void multipleUsersCheckingoutAndReturningSameBookTest() {
-        service.getUserService().signupUser("Swetha", "yarlagadda", "32434 GC FHills MI", 32, "yy.ss@gmail.com");
-        service.getBookService().addBook("yy.ss@gmail.com", "Chicken Squad", "Cronin", "fiction", 2);
+        service.getBookService().addBook(USER1, "Chicken Squad", "Cronin", "fiction", 2);
         Instant currentTime = Instant.now();
-        CheckedoutBook c = service.getBookService().checkoutBook("yy.ss@gmail.com", "Chicken Squad", currentTime);
-        assertEquals(c.getEmail(), "yy.ss@gmail.com");
+        CheckedoutBook c = service.getBookService().checkoutBook(USER1, "Chicken Squad", currentTime);
+        assertEquals(c.getEmail(), USER1);
         assertEquals(c.getTitle(), "Chicken Squad");
         assertEquals(c.getCheckedoutDate(), currentTime);
-        List<CheckedoutBook> checkedoutBookList1 = service.getBookService().listOfCheckedoutBooks("yy.ss@gmail.com");
+        List<CheckedoutBook> checkedoutBookList1 = service.getBookService().listOfCheckedoutBooks(USER1);
         assertEquals(checkedoutBookList1.size(), 1);
-        CheckedoutBook r = service.getBookService().returnBook("yy.ss@gmail.com", "Chicken Squad", currentTime);
-        assertEquals(r.getEmail(), "yy.ss@gmail.com");
+        CheckedoutBook r = service.getBookService().returnBook(USER1, "Chicken Squad", currentTime);
+        assertEquals(r.getEmail(), USER1);
         assertEquals(r.getTitle(), "Chicken Squad");
         assertEquals(r.getReturnDate(), currentTime);
-        List<CheckedoutBook> returnedBookList1 = service.getBookService().listOfReturnedBooks("yy.ss@gmail.com");
+        List<CheckedoutBook> returnedBookList1 = service.getBookService().listOfReturnedBooks(USER1);
         assertEquals(returnedBookList1.size(), 1);
-        List<CheckedoutBook> checkedoutBookList2 = service.getBookService().listOfCheckedoutBooks("yy.ss@gmail.com");
+        List<CheckedoutBook> checkedoutBookList2 = service.getBookService().listOfCheckedoutBooks(USER1);
         assertEquals(checkedoutBookList2.size(), 0);
         service.getUserService().signupUser("Phani", "yarlagadda", "1111 aa Newark CA", 32, "pp.yy@gmail.com");
         CheckedoutBook ch = service.getBookService().checkoutBook("pp.yy@gmail.com", "Chicken Squad", currentTime);
@@ -219,29 +222,27 @@ public class BookServiceTest {
     //simple return book test
     @Test
     public void simpleReturnBookTest() {
-        service.getUserService().signupUser("Swetha", "yarlagadda", "32434 GC FHills MI", 32, "yy.ss@gmail.com");
-        service.getBookService().addBook("yy.ss@gmail.com", "Chicken Squad", "Cronin", "fiction", 2);
+        service.getBookService().addBook(USER1, "Chicken Squad", "Cronin", "fiction", 2);
         Instant currentTime = Instant.now();
-        service.getBookService().checkoutBook("yy.ss@gmail.com", "Chicken Squad", currentTime);
-        CheckedoutBook r = service.getBookService().returnBook("yy.ss@gmail.com", "Chicken Squad", currentTime);
-        assertEquals(r.getEmail(), "yy.ss@gmail.com");
+        service.getBookService().checkoutBook(USER1, "Chicken Squad", currentTime);
+        CheckedoutBook r = service.getBookService().returnBook(USER1, "Chicken Squad", currentTime);
+        assertEquals(r.getEmail(), USER1);
         assertEquals(r.getTitle(), "Chicken Squad");
         assertEquals(r.getReturnDate(), currentTime);
-        List<CheckedoutBook> returnedBookList = service.getBookService().listOfReturnedBooks("yy.ss@gmail.com");
+        List<CheckedoutBook> returnedBookList = service.getBookService().listOfReturnedBooks(USER1);
         assertEquals(returnedBookList.size(), 1);
-        List<CheckedoutBook> checkedoutBookList = service.getBookService().listOfCheckedoutBooks("yy.ss@gmail.com");
+        List<CheckedoutBook> checkedoutBookList = service.getBookService().listOfCheckedoutBooks(USER1);
         assertEquals(checkedoutBookList.size(), 0);
     }
 
     //Return a different book that is not checked out
     @Test
     public void returnABookThatIsNotCheckedoutTest() {
-        service.getUserService().signupUser("Swetha", "Yarlagadda", "32422 GC FHills MI", 32, "yy.ss@gmail.com");
-        service.getBookService().addBook("yy.ss@gmail.com", "Chicken Squad", "Cronin", "fiction", 2);
+        service.getBookService().addBook(USER1, "Chicken Squad", "Cronin", "fiction", 2);
         Instant currentTime = Instant.now();
-        service.getBookService().checkoutBook("yy.ss@gmail.com", "Chicken Squad", currentTime);
+        service.getBookService().checkoutBook(USER1, "Chicken Squad", currentTime);
         try {
-            service.getBookService().returnBook("yy.ss@gmail.com", "Amelia Bedelia", currentTime);
+            service.getBookService().returnBook(USER1, "Amelia Bedelia", currentTime);
         } catch (BookNotCheckedoutException ex) {
                assertEquals("This book is not checkedout by you", ex.getMessage());
         }

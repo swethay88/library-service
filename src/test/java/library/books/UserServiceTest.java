@@ -2,13 +2,21 @@ package library.books;
 
 import library.books.exceptions.EmailAlreadyExistsException;
 import library.books.exceptions.InvalidEmailException;
-import org.junit.jupiter.api.Test;
+import org.junit.Before;
+import org.junit.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+
 
 public class UserServiceTest {
 
-    private LibraryService service = new LibraryService();
+    private LibraryService service;
+
+    @Before
+    public void setUp(){
+        service = new LibraryService();
+    }
 
     @Test
     public void testSignupUserSimple() {
