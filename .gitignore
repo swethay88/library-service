@@ -1,0 +1,16 @@
+# ignore class files
+*.class
+build/**/
+
+# ignore gradle files
+.gradle/
+settings.gradle
+gradle
+gradlew*
+gradle/**/
+
+#ignore idea files
+.idea
+
+# ignore git files
+#.gitignore

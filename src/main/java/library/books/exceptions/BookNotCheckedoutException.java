@@ -1,4 +1,4 @@
-package library.books;
+package library.books.exceptions;
 
 public class BookNotCheckedoutException extends RuntimeException{
     public BookNotCheckedoutException(String message){

@@ -1,8 +1,9 @@
 package library.books;
 
-import java.util.ArrayList;
+import library.books.exceptions.EmailAlreadyExistsException;
+import library.books.exceptions.InvalidEmailException;
+
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -17,33 +18,31 @@ public class UserService {
      * userDetails map is used to store details of user with email as key and other details as value.
      */
 
-    private Map<String, List<String>> userDetails = new HashMap<>();
+    private Map<String, User> userDetails = new HashMap<>();
 
-    public boolean signupUser(String firstName, String lastName, String address, int age, String email) {
+    public void signupUser(String firstName, String lastName, String address, int age, String email) {
 
         /**
-         * validate if the email already exists in userDetails, throws an exception. If not, details will be put to userDetails map.
+         * If the email already exists in userDetails, throws an exception. If not, details will be put to userDetails map.
          */
 
         if (userDetails.containsKey(email)) {
             throw new EmailAlreadyExistsException("email already exists. Please use another email");
-        } else {
-
-            /**
-             * Validate if the email format is correct
-             */
-
-            if (!email.contains("@") || !email.endsWith(".com")) {
-                throw new InvalidEmailException("Invalid email");
-            } else {
-                List<String> list = new ArrayList<>();
-                list.add(firstName);
-                list.add(lastName);
-                list.add(address);
-                list.add(Integer.toString(age));
-                userDetails.put(email, list);
-            }
         }
-        return true;
+        /**
+         * Validate if the email format is correct
+         */
+        if (!email.contains("@") || !email.endsWith(".com")) {
+            throw new InvalidEmailException("Invalid email");
+        }
+        User user = new User(firstName, lastName, address, age, email);
+        userDetails.put(email, user);
+    }
+
+    public boolean doesUserExist(String email){
+        if(userDetails.containsKey(email)){
+            return true;
+        }
+        return false;
     }
 }

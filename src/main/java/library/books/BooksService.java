@@ -1,6 +1,7 @@
 package library.books;
 
-import javax.swing.*;
+import library.books.exceptions.*;
+
 import java.time.Instant;
 import java.util.*;
 
@@ -90,15 +91,13 @@ public class BooksService {
        // i.e., a user can return books checkedout from the respective account
        // i.e., a user cannot return the books checkedout by other users
        List<CheckedoutBook> currentChekedoutBookList = displayCheckedoutBooks.get(email);
-       int check = 0;
+       boolean isCheckedOut = false;
        for(CheckedoutBook c : currentChekedoutBookList) {
            if (c.getTitle().equals(title)) {
-               check++;
+               isCheckedOut = true;
            }
-
-
        }
-       if(check == 0){
+       if(!isCheckedOut){
            throw new BookNotCheckedoutException("This book is not checkedout by you");
        }
 

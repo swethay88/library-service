@@ -1,5 +1,9 @@
 package library.books;
 
+import library.books.exceptions.BookCopyNotAvailableException;
+import library.books.exceptions.BookNotCheckedoutException;
+import library.books.exceptions.BookTitleNotAvailableException;
+import library.books.exceptions.UserDoesNotExistException;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
@@ -26,41 +30,37 @@ public class BookServiceTest {
         assertEquals(checkedoutBookList.size(), 1);
     }
 
-    //Test if user doesn't exist
+    //Test if user doesn't exist ie., if user didn't signup, but trying to checkout a book
     @Test
     public void chekoutBookUserDoesntExistTest() {
         try {
-            if (!service.getUserService().doesUserExist("yy.ss@gmail.com")) {
-                throw new InvalidEmailException("invalid email");
-            }
+            service.getBookService().checkoutBook("yy.ss@gmail.com", "Chicken Squad", Instant.now());
             fail("Expecting exception");
-        } catch (InvalidEmailException ex) {
+        } catch (UserDoesNotExistException ex) {
             // expected exception
-            assertEquals("invalid email", ex.getMessage());
+            assertEquals("Invalid user", ex.getMessage());
         }
     }
 
-    //Test if book doesn't exist
+    //Test if book doesn't exist ie., if the user is trying to checkout a book which is not added in the library
     @Test
     public void titleDoesntExistTest() {
+        service.getUserService().signupUser("Swetha", "yarlagadda", "32434 GC FHills MI", 32, "yy.ss@gmail.com");
         try {
-            service.getUserService().signupUser("Swetha", "yarlagadda", "32434 GC FHills MI", 32, "yy.ss@gmail.com");
-            if (service.getBookService().searchBook("yy.ss@gmail.com", "Aaa") == null) {
-                throw new BookTitleNotAvailableException("Book title is not available");
-            }
+            service.getBookService().checkoutBook("yy.ss@gmail.com", "Chicken Squad", Instant.now());
             fail("Expecting exception");
         } catch (BookTitleNotAvailableException ex) {
-            assertEquals("Book title is not available", ex.getMessage());
+            assertEquals("The book title is not available", ex.getMessage());
         }
     }
 
-    //Test if no of copies aren't available in the library
+    //Test if the user is trying to checkout a book but copies of the book aren't available in the library
     @Test
     public void copiesNotAvailableTest() {
+        service.getUserService().signupUser("Swetha", "yarlagadda", "32434 GC FHills MI", 32, "yy.ss@gmail.com");
+        service.getBookService().addBook("yy.ss@gmail.com", "Chicken Squad", "Cronin", "fiction", 1);
+        service.getBookService().checkoutBook("yy.ss@gmail.com", "Chicken Squad", Instant.now());
         try {
-            service.getUserService().signupUser("Swetha", "yarlagadda", "32434 GC FHills MI", 32, "yy.ss@gmail.com");
-            service.getBookService().addBook("yy.ss@gmail.com", "Chicken Squad", "Cronin", "fiction", 1);
-            service.getBookService().checkoutBook("yy.ss@gmail.com", "Chicken Squad", Instant.now());
             service.getBookService().checkoutBook("yy.ss@gmail.com", "Chicken Squad", Instant.now());
             fail("Expecting exception");
         } catch (BookCopyNotAvailableException ex) {
@@ -82,7 +82,7 @@ public class BookServiceTest {
 
     }*/
 
-    //one user checking out multiple books
+    //one user checking out multiple books and returning a book
     @Test
     public void oneUserMultipleBooksCheckoutAndReturnTest() {
         service.getUserService().signupUser("Swetha", "yarlagadda", "32434 GC FHills MI", 32, "yy.ss@gmail.com");
@@ -236,15 +236,14 @@ public class BookServiceTest {
     //Return a different book that is not checked out
     @Test
     public void returnABookThatIsNotCheckedoutTest() {
+        service.getUserService().signupUser("Swetha", "Yarlagadda", "32422 GC FHills MI", 32, "yy.ss@gmail.com");
+        service.getBookService().addBook("yy.ss@gmail.com", "Chicken Squad", "Cronin", "fiction", 2);
+        Instant currentTime = Instant.now();
+        service.getBookService().checkoutBook("yy.ss@gmail.com", "Chicken Squad", currentTime);
         try {
-            service.getUserService().signupUser("Swetha", "Yarlagadda", "32422 GC FHills MI", 32, "yy.ss@gmail.com");
-            service.getBookService().addBook("yy.ss@gmail.com", "Chicken Squad", "Cronin", "fiction", 2);
-            Instant currentTime = Instant.now();
-            service.getBookService().checkoutBook("yy.ss@gmail.com", "Chicken Squad", currentTime);
             service.getBookService().returnBook("yy.ss@gmail.com", "Amelia Bedelia", currentTime);
         } catch (BookNotCheckedoutException ex) {
                assertEquals("This book is not checkedout by you", ex.getMessage());
         }
     }
-
 }
