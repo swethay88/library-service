@@ -10,8 +10,7 @@ import org.junit.Test;
 import java.time.Instant;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 public class BookServiceTest {
 
@@ -51,6 +50,18 @@ public class BookServiceTest {
         }
     }
 
+    //Test if user doesn't exist ie., if user didn't signup, but trying to return a book
+    @Test
+    public void returnBookUserDoesntExistTest() {
+        try {
+            service.getBookService().returnBook("user2@gmail.com", "Chicken Squad", Instant.now());
+            fail("Expecting exception");
+        } catch (UserDoesNotExistException ex) {
+            // expected exception
+            assertEquals("Invalid user", ex.getMessage());
+        }
+    }
+
     //Test if book doesn't exist ie., if the user is trying to checkout a book which is not added in the library
     @Test
     public void titleDoesntExistTest() {
@@ -76,18 +87,11 @@ public class BookServiceTest {
     }
 
     //checkedout books are null i.e., List is empty
-    /*@Test
+    @Test
     public void noCheckedoutBooksTest() {
-        try {
-            service.getUserService().signupUser("Swetha", "yarlagadda", "32434 GC FHills MI", 32, USER1);
             List<CheckedoutBook> checkedoutBookList = service.getBookService().listOfCheckedoutBooks(USER1);
-            assertNotNull(checkedoutBookList);
-            fail("Expecting exception");
-        } catch (NoCheckedoutBooksException ex) {
-
+            assertNull(checkedoutBookList);
         }
-
-    }*/
 
     //one user checking out multiple books and returning a book
     @Test
@@ -246,5 +250,30 @@ public class BookServiceTest {
         } catch (BookNotCheckedoutException ex) {
                assertEquals("This book is not checkedout by you", ex.getMessage());
         }
+    }
+
+    // If a user signedup but did not return books
+    @Test
+    public void noReturnedBooksTest() {
+        List<CheckedoutBook> historyOfCheckedoutBookList = service.getBookService().listOfReturnedBooks(USER1);
+        assertNull(historyOfCheckedoutBookList);
+    }
+
+    //Search book by genre
+    @Test
+    public void searchBookByGenreTest(){
+        service.getBookService().addBook(USER1, "Chicken Squad", "Cronin", "fiction", 2);
+        Instant currentTime = Instant.now();
+        List<Book> booksByGenre = service.getBookService().searchBooksByGenre(USER1, "fiction");
+        assertEquals(booksByGenre.size(), 1);
+    }
+
+    //If the specified genre is not available test
+    @Test
+    public void searchBookByGenreNotAvailableTest(){
+        service.getBookService().addBook(USER1, "Chicken Squad", "Cronin", "fiction", 2);
+        Instant currentTime = Instant.now();
+        List<Book> booksByGenre = service.getBookService().searchBooksByGenre(USER1, "mystery");
+        assertEquals(booksByGenre.size(), 0);
     }
 }
