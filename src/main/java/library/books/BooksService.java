@@ -3,6 +3,7 @@ package library.books;
 import library.books.exceptions.*;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 public class BooksService {
@@ -75,13 +76,34 @@ public class BooksService {
             throw new MaximumCheckedoutBooksReachedException("You can only checkout maximum of 5 books");
         }
         //checkingout book
-        CheckedoutBook checkedoutBook = new CheckedoutBook(email, title, checkedoutDate);
-        if (!displayCheckedoutBooks.containsKey(email)) {
-            displayCheckedoutBooks.put(email, new ArrayList<>());
+        List<CheckedoutBook> rBooks = listOfReturnedBooks(email);
+        boolean isAllowed = true;
+        for (CheckedoutBook ch : rBooks) {
+            String t = ch.getTitle();
+            Instant rDate = ch.getReturnDate();
+            Instant chDate = ch.getCheckedoutDate();
+            int x = returnBookWithinTenDays(email, t, chDate, rDate);
+            Instant limitDate = rDate.plus(7, ChronoUnit.DAYS);
+            int temp = Instant.now().compareTo(limitDate);
+            if (x > 0 && temp <= 0) {
+                isAllowed = false;
+                break;
+            }
         }
-        displayCheckedoutBooks.get(email).add(checkedoutBook);
-        int nCopies = allBooks.get(title).getNoOfCopies() - 1;
-        allBooks.get(title).setNoOfCopies(nCopies);
+
+        CheckedoutBook checkedoutBook = null;
+        if (isAllowed) {
+            checkedoutBook = new CheckedoutBook(email, title, checkedoutDate);
+            if (!displayCheckedoutBooks.containsKey(email)) {
+                displayCheckedoutBooks.put(email, new ArrayList<>());
+            }
+            displayCheckedoutBooks.get(email).add(checkedoutBook);
+            int nCopies = allBooks.get(title).getNoOfCopies() - 1;
+            allBooks.get(title).setNoOfCopies(nCopies);
+        }
+        else{
+            throw new CheckingoutBooksBlockedException("Sorry! You can not checkout books because of late return");
+        }
         return checkedoutBook;
     }
 
@@ -165,5 +187,13 @@ public class BooksService {
             });
         }
         return historyOfCheckedoutBookList;
+    }
+
+    public int returnBookWithinTenDays(String email, String title, Instant checkedoutDate, Instant returnDate){
+        Instant dueDate = checkedoutDate.plus(10, ChronoUnit.DAYS);
+        int value = returnDate.compareTo(dueDate);
+        //if value is greater than 0 then returnDate is greater than limitDate
+        // i.e., user didn't return book by due date
+        return value;
     }
 }
